@@ -70,13 +70,14 @@ def convert_farm_geojson_to_kml(data):
             st.warning(f"Skipped one record due to error: {str(e)}")
     
     # Save the KML to a string buffer
-    kml_output = io.BytesIO()
-    kml.savekmz(kml_output)
+    kml_output = io.StringIO()
+    kml.save(kml_output)
     return kml_output.getvalue()
 
 def get_download_link(file_content, file_name):
-    b64 = base64.b64encode(file_content).decode()
-    return f'<a href="data:application/vnd.google-earth.kmz;base64,{b64}" download="{file_name}">Download KMZ file</a>'
+    # For KML (text format)
+    b64 = base64.b64encode(file_content.encode()).decode()
+    return f'<a href="data:application/vnd.google-earth.kml+xml;base64,{b64}" download="{file_name}">Download KML file</a>'
 
 # File uploader for GeoJSON
 uploaded_file = st.file_uploader("Upload Farm Data GeoJSON file", type=['json', 'geojson'])
@@ -94,15 +95,15 @@ if uploaded_file is not None:
         if st.button("Convert to KML"):
             with st.spinner("Converting..."):
                 # Perform the conversion
-                kmz_content = convert_farm_geojson_to_kml(geojson_data)
+                kml_content = convert_farm_geojson_to_kml(geojson_data)
                 
-                # Provide a download link for the KMZ file
-                file_name = uploaded_file.name.rsplit('.', 1)[0] + '.kmz'
+                # Provide a download link for the KML file
+                file_name = uploaded_file.name.rsplit('.', 1)[0] + '.kml'
                 st.success("Conversion successful!")
-                st.markdown(get_download_link(kmz_content, file_name), unsafe_allow_html=True)
+                st.markdown(get_download_link(kml_content, file_name), unsafe_allow_html=True)
                 
                 # Display success message and instructions
-                st.info("Click the link above to download your KMZ file. This can be opened in Google Earth or similar applications.")
+                st.info("Click the link above to download your KML file. This can be opened in Google Earth or similar applications.")
                 
     except Exception as e:
         st.error(f"Error processing file: {str(e)}")
@@ -169,14 +170,14 @@ else:
             if st.button("Convert Sample to KML"):
                 with st.spinner("Converting..."):
                     # Perform the conversion
-                    kmz_content = convert_farm_geojson_to_kml(sample_data)
+                    kml_content = convert_farm_geojson_to_kml(sample_data)
                     
-                    # Provide a download link for the KMZ file
+                    # Provide a download link for the KML file
                     st.success("Conversion successful!")
-                    st.markdown(get_download_link(kmz_content, "farm_sample.kmz"), unsafe_allow_html=True)
+                    st.markdown(get_download_link(kml_content, "farm_sample.kml"), unsafe_allow_html=True)
                     
                     # Display success message
-                    st.info("Click the link above to download your KMZ file")
+                    st.info("Click the link above to download your KML file")
 
 # Add explanatory information
 st.markdown("---")
@@ -189,12 +190,12 @@ This tool is specially designed to convert farm polygon data from the provided f
 - Converts farm polygons stored in the "PolyGeoJson" field
 - Includes all farm attributes as properties in the KML description
 - Creates nicely styled polygons with custom names based on entity name, plot ID, and commodity
-- Outputs as KMZ file (compressed KML) for easier sharing
+- Outputs as standard KML file for maximum compatibility
 
 #### Instructions:
 1. Upload your farm data JSON file
 2. Click "Convert to KML"
-3. Download the resulting KMZ file
+3. Download the resulting KML file
 4. Open in Google Earth or similar application
 
 #### Data Structure Requirements:
