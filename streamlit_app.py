@@ -2,7 +2,8 @@ import streamlit as st
 import json
 import simplekml
 import base64
-import io
+import tempfile
+import os
 
 st.set_page_config(page_title="Farm Data GeoJSON to KML Converter", page_icon="🌎")
 
@@ -69,14 +70,17 @@ def convert_farm_geojson_to_kml(data):
         except Exception as e:
             st.warning(f"Skipped one record due to error: {str(e)}")
     
-    # Create a temporary file and save the KML to it
-    with io.BytesIO() as f:
-        kml.save(f)
-        f.seek(0)
+    # Save the KML to a temporary file and read it back
+    temp_dir = tempfile.mkdtemp()
+    temp_file = os.path.join(temp_dir, "temp.kml")
+    
+    kml.save(temp_file)
+    
+    # Read the file back
+    with open(temp_file, 'rb') as f:
         return f.read()
 
 def get_download_link(file_content, file_name):
-    # For KML (binary content)
     b64 = base64.b64encode(file_content).decode()
     return f'<a href="data:application/vnd.google-earth.kml+xml;base64,{b64}" download="{file_name}">Download KML file</a>'
 
@@ -108,6 +112,7 @@ if uploaded_file is not None:
                 
     except Exception as e:
         st.error(f"Error processing file: {str(e)}")
+        st.exception(e)  # This will show a more detailed error message
 else:
     # Sample data section based on the user's example
     with st.expander("Don't have a file ready? Try our sample data"):
