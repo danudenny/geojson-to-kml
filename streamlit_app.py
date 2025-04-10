@@ -69,14 +69,15 @@ def convert_farm_geojson_to_kml(data):
         except Exception as e:
             st.warning(f"Skipped one record due to error: {str(e)}")
     
-    # Save the KML to a string buffer
-    kml_output = io.StringIO()
-    kml.save(kml_output)
-    return kml_output.getvalue()
+    # Create a temporary file and save the KML to it
+    with io.BytesIO() as f:
+        kml.save(f)
+        f.seek(0)
+        return f.read()
 
 def get_download_link(file_content, file_name):
-    # For KML (text format)
-    b64 = base64.b64encode(file_content.encode()).decode()
+    # For KML (binary content)
+    b64 = base64.b64encode(file_content).decode()
     return f'<a href="data:application/vnd.google-earth.kml+xml;base64,{b64}" download="{file_name}">Download KML file</a>'
 
 # File uploader for GeoJSON
